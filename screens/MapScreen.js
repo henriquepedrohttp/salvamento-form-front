@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Location from 'expo-location'; 
 
-const API_URL = 'http://192.168.0.102:3000';
+const API_URL = 'http://192.168.0.102:3000'; 
 
 export default function MapScreen() {
   const [occurrences, setOccurrences] = useState([]);
@@ -13,16 +15,38 @@ export default function MapScreen() {
     fetchData();
   }, []);
 
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Não foi possível acessar a localização para centralizar o mapa.');
+        return null;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+    } catch (error) {
+      console.log('Erro ao pegar localização atual:', error);
+      return null;
+    }
+  };
+
   const fetchData = async () => {
     try {
       const res = await fetch(`${API_URL}/occurrences`);
       const data = await res.json();
+      
       setOccurrences(data);
 
-      // Filtra ocorrências com coordenadas válidas
-      const occurrencesWithCoords = data.filter(occ => 
-        occ.latitude && occ.longitude
-      );
+      const occurrencesWithCoords = data.filter(occ => occ.latitude && occ.longitude);
 
       if (occurrencesWithCoords.length > 0) {
         const avgLat = occurrencesWithCoords.reduce((sum, p) => sum + Number(p.latitude), 0) / occurrencesWithCoords.length;
@@ -35,23 +59,15 @@ export default function MapScreen() {
           longitudeDelta: 0.1,
         });
       } else {
-        // Coordenadas de referência para Pernambuco
-        setRegion({
-          latitude: -8.0476,
-          longitude: -34.8770,
-          latitudeDelta: 0.5,
-          longitudeDelta: 0.5,
-        });
+        
+        const userRegion = await getUserLocation();
+        
+        if (userRegion) {
+          setRegion(userRegion);
+        }
       }
     } catch (error) {
-      console.error('Erro ao carregar mapa:', error);
-      // Coordenadas padrão para Pernambuco em caso de erro
-      setRegion({
-        latitude: -8.0476,
-        longitude: -34.8770,
-        latitudeDelta: 0.5,
-        longitudeDelta: 0.5,
-      });
+      console.error('Erro mapa:', error);
     } finally {
       setLoading(false);
     }
@@ -66,10 +82,10 @@ export default function MapScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['right', 'bottom', 'left']}>
       <MapView 
         style={styles.map} 
-        initialRegion={region}
+        region={region} 
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
@@ -83,12 +99,12 @@ export default function MapScreen() {
                 longitude: Number(occ.longitude),
               }}
               title={`Ocorrência: ${occ.codigoOcorrencia || 'N/A'}`}
-              description={`Grupo: ${occ.grupo || 'N/A'} - Vítimas: ${occ.numeroVitimas || 0}`}
-              pinColor="red"
+              description={`Tipo: ${occ.tipoSalvamento || occ.grupo}`}
+              pinColor={occ.houveMergulho ? "blue" : "red"}
             />
           ))}
       </MapView>
-    </View>
+    </SafeAreaView>
   );
 }
 

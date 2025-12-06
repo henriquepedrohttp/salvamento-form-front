@@ -1,7 +1,10 @@
 import React from 'react';
+import { Platform, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import HomeScreen from './screens/HomeScreen';
 import FormStep1Screen from './screens/FormStep1Screen';
 import FormStep2Screen from './screens/FormStep2Screen';
@@ -9,14 +12,13 @@ import MapScreen from './screens/MapScreen';
 
 const Stack = createStackNavigator();
 
-// Tema personalizado para o Corpo de Bombeiros de Pernambuco
 const theme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#e53935', // Vermelho do CBM-PE
-    secondary: '#1565c0', // Azul
-    accent: '#ff5722', // Laranja
+    primary: '#e53935',
+    secondary: '#1565c0',
+    accent: '#ff5722',
     background: '#f5f5f5',
     surface: '#ffffff',
     error: '#d32f2f',
@@ -29,42 +31,44 @@ const theme = {
 
 export default function App() {
   return (
-    <PaperProvider theme={theme}>
-      <NavigationContainer>
-        <Stack.Navigator 
-          initialRouteName="Home"
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: '#e53935', // Cabeçalho vermelho
-            },
-            headerTintColor: '#fff',
-            headerTitleStyle: {
-              fontWeight: 'bold',
-            },
-          }}
-        >
-          <Stack.Screen 
-            name="Home" 
-            component={HomeScreen} 
-            options={{ title: 'Ocorrências CBM-PE' }}
-          />
-          <Stack.Screen 
-            name="FormStep1" 
-            component={FormStep1Screen} 
-            options={{ title: 'Nova Ocorrência - Etapa 1' }}
-          />
-          <Stack.Screen 
-            name="FormStep2" 
-            component={FormStep2Screen} 
-            options={{ title: 'Nova Ocorrência - Etapa 2' }}
-          />
-          <Stack.Screen 
-            name="Mapa" 
-            component={MapScreen} 
-            options={{ title: 'Mapa de Ocorrências' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider theme={theme}>
+        <NavigationContainer>
+          <Stack.Navigator 
+            initialRouteName="Home"
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#e53935',
+              },
+              headerTintColor: '#fff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }}
+          >
+            <Stack.Screen 
+              name="Home" 
+              component={HomeScreen} 
+              options={{ title: 'Ocorrências CBM-PE' }}
+            />
+            <Stack.Screen 
+              name="FormStep1" 
+              component={FormStep1Screen} 
+              options={{ title: 'Nova Ocorrência - Etapa 1' }}
+            />
+            <Stack.Screen 
+              name="FormStep2" 
+              component={FormStep2Screen} 
+              options={{ title: 'Nova Ocorrência - Etapa 2' }}
+            />
+            <Stack.Screen 
+              name="Mapa" 
+              component={MapScreen} 
+              options={{ title: 'Mapa de Ocorrências' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
